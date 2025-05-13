@@ -4,13 +4,22 @@ import { useRouter } from "next/navigation";
 import CategoryModal from "../components/CategoryModal";
 import Image from "next/image";
 
+type SpeechRecognitionEvent = Event & {
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
+};
+
+type SpeechRecognitionErrorEvent = Event & {
+  readonly error: string;
+};
+
 
 type SpeechRecognition = {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   onstart: () => void;
-  onresult: (event: any) => void;
+ onresult: (event: SpeechRecognitionEvent) => void;
   onerror: (event: any) => void;
   onend: () => void;
   start: () => void;
@@ -126,16 +135,19 @@ const [, setSelectedCategory] = useState<string | null>(null);
 
     recognition.onstart = () => setIsListening(true);
 
-    recognition.onresult = (event: any) => {
-      const speechResult = event.results[event.resultIndex][0].transcript;
-      console.log("Speech recognized:", speechResult);
-      setInput(speechResult);
-    };
+    // Line 129
+recognition.onresult = (event: SpeechRecognitionEvent) => {
+  const speechResult = event.results[event.resultIndex][0].transcript;
+  console.log("Speech recognized:", speechResult);
+  setInput(speechResult);
+};
 
-    recognition.onerror = (event: any) => {
-      console.error("Speech error", event.error);
-      alert("Speech recognition error: " + event.error);
-    };
+// Line 135
+recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+  console.error("Speech error", event.error);
+  alert("Speech recognition error: " + event.error);
+};
+
 
     recognition.onend = () => {
       setIsListening(false);

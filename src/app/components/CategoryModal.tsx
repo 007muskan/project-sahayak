@@ -10,7 +10,7 @@ export default function CategoryModal({
   onSelect: (category: string) => void;
 }) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<FormDataType>({});
   const [step, setStep] = useState(1); // Step 1: Category Selection, 2: Dynamic Form
 
   type FormDataType = {
