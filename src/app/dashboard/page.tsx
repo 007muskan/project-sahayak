@@ -1,9 +1,11 @@
 "use client";
+
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import CategoryModal from "../components/CategoryModal";
 import Image from "next/image";
 
+// Type definitions
 type SpeechRecognitionEvent = Event & {
   readonly resultIndex: number;
   readonly results: SpeechRecognitionResultList;
@@ -13,13 +15,12 @@ type SpeechRecognitionErrorEvent = Event & {
   readonly error: string;
 };
 
-
 type SpeechRecognition = {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   onstart: () => void;
- onresult: (event: SpeechRecognitionEvent) => void;
+  onresult: (event: SpeechRecognitionEvent) => void;
   onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: () => void;
   start: () => void;
@@ -32,7 +33,6 @@ declare global {
     };
   }
 }
-
 
 interface Message {
   role: "user" | "bot";
@@ -47,33 +47,34 @@ const Dashboard = () => {
   const [input, setInput] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-// If you don't plan to use it right now:
-const [, setSelectedCategory] = useState<string | null>(null);
+  const [, setSelectedCategory] = useState<string | null>(null);
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
+  const chatRef = useRef<HTMLDivElement>(null);
 
-  // Effect to load query history from localStorage
+  // Load query history on mount
   useEffect(() => {
     const saved = localStorage.getItem("queryHistory");
     if (saved) {
       setQueryHistory(JSON.parse(saved));
     }
-  }, []); 
+  }, []);
 
-  const chatRef = useRef<HTMLDivElement>(null);
-
+  // Redirect if not logged in
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("loggedIn");
     if (isLoggedIn !== "true") {
       router.push("/");
     }
-  },[router]);
+  }, [router]);
 
+  // Auto-scroll to bottom on new message
   useEffect(() => {
     if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
   }, [messages]);
 
+  // Save query history on update
   useEffect(() => {
     localStorage.setItem("queryHistory", JSON.stringify(queryHistory));
   }, [queryHistory]);
@@ -86,17 +87,18 @@ const [, setSelectedCategory] = useState<string | null>(null);
     setQueryHistory((prev) => [...prev, input]);
     setInput("");
 
-    const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:5000'
-    : 'https://sahayak-sybj.onrender.com');
+    try {
+      const BACKEND_URL =
+        process.env.NEXT_PUBLIC_BACKEND_URL ||
+        (typeof window !== "undefined" && window.location.hostname === "localhost"
+          ? "http://localhost:5000"
+          : "https://sahayak-sybj.onrender.com");
 
-const res = await fetch(`${BACKEND_URL}/ask`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ question: userMsg.text }),
-});
+      const res = await fetch(`${BACKEND_URL}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: userMsg.text }),
+      });
 
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
@@ -123,7 +125,7 @@ const res = await fetch(`${BACKEND_URL}/ask`, {
   };
 
   const logout = () => {
-    localStorage.removeItem("loggedIn");  // Don't remove queryHistory
+    localStorage.removeItem("loggedIn");
     router.push("/");
   };
 
@@ -140,19 +142,16 @@ const res = await fetch(`${BACKEND_URL}/ask`, {
 
     recognition.onstart = () => setIsListening(true);
 
-    // Line 129
-recognition.onresult = (event: SpeechRecognitionEvent) => {
-  const speechResult = event.results[event.resultIndex][0].transcript;
-  console.log("Speech recognized:", speechResult);
-  setInput(speechResult);
-};
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const speechResult = event.results[event.resultIndex][0].transcript;
+      console.log("Speech recognized:", speechResult);
+      setInput(speechResult);
+    };
 
-// Line 135
-recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-  console.error("Speech error", event.error);
-  alert("Speech recognition error: " + event.error);
-};
-
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error("Speech error", event.error);
+      alert("Speech recognition error: " + event.error);
+    };
 
     recognition.onend = () => {
       setIsListening(false);
@@ -167,37 +166,27 @@ recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       {/* Sidebar */}
       <aside className="w-[250px] bg-[#1F1B2E] p-4 flex flex-col">
         <div className="relative w-[200px] h-[200px] mt-[-45px] mb-[-30px] ml-[-10px]">
-  <Image
-    src="/main-logo.png"
-    alt="App Logo"
-    fill
-    className="object-contain"
-    priority
-  />
-</div>
+          <Image src="/main-logo.png" alt="App Logo" fill className="object-contain" priority />
+        </div>
         <button className="bg-[#3F3B5A] text-white py-2 px-4 rounded mb-4 hover:bg-[#4A456A]">
           + New Chat
         </button>
         <button
-  onClick={() => setIsModalOpen(true)}
-  className="mt-2 mb-5 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
->
-  Get Personalized Recommendation
-</button>
+          onClick={() => setIsModalOpen(true)}
+          className="mt-2 mb-5 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+        >
+          Get Personalized Recommendation
+        </button>
 
+        <CategoryModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSelect={(category) => {
+            setSelectedCategory(category);
+            console.log("Selected Category:", category);
+          }}
+        />
 
-    <CategoryModal
-      isOpen={isModalOpen}
-      onClose={() => setIsModalOpen(false)}
-      onSelect={(category) => {
-        setSelectedCategory(category);
-        // Move to next screen logic
-        console.log("Selected Category:", category);
-      }}
-    />
-
-
-        {/* History */}
         <div className="flex-1 overflow-y-auto space-y-2">
           {queryHistory.map((query, index) => (
             <button
@@ -222,10 +211,15 @@ recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className={`w-full p-3 rounded-md ${msg.role === "user" ? "self-end bg-[#635FC7]" : "self-start bg-[#3F3B5A]"}`}
+              className={`w-full p-3 rounded-md ${
+                msg.role === "user" ? "self-end bg-[#635FC7]" : "self-start bg-[#3F3B5A]"
+              }`}
             >
               {msg.text.startsWith("<table") ? (
-                <div dangerouslySetInnerHTML={{ __html: msg.text }} className="overflow-x-auto border border-gray-600 rounded-lg shadow-lg" />
+                <div
+                  dangerouslySetInnerHTML={{ __html: msg.text }}
+                  className="overflow-x-auto border border-gray-600 rounded-lg shadow-lg"
+                />
               ) : (
                 msg.text
               )}
@@ -257,61 +251,34 @@ recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               className="w-full p-3 rounded-md bg-[#2B2738] border border-gray-600 text-white"
             />
-         <button
-  onClick={handleSend}
-  className="flex items-center justify-center gap-2 px-5 h-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-transform duration-200 hover:from-blue-500 hover:to-indigo-500 active:scale-95"
->
-  Send
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-    stroke="currentColor"
-    className="w-5 h-5"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M5 12h14M12 5l7 7-7 7"
-    />
-  </svg>
-</button>
+            <button
+              onClick={handleSend}
+              className="flex items-center justify-center gap-2 px-5 h-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium shadow-md hover:shadow-lg hover:scale-105 transition-transform duration-200 hover:from-blue-500 hover:to-indigo-500 active:scale-95"
+            >
+              Send
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
 
-
-           <div className="relative">
-  {/* Pulse effect while listening */}
-  {isListening && (
-    <div className="absolute inset-0 animate-ping w-12 h-12 rounded-full bg-blue-500 opacity-30 z-0"></div>
-  )}
-
-  {/* Mic button */}
-  <button
-    onClick={startListening}
-    className="w-12 h-12 flex items-center justify-center rounded-full bg-[#4A456A] hover:ring-2 hover:ring-blue-400 hover:bg-[#635FC7] transition shadow-md relative z-10"
-    title="Speak"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth={2}
-      stroke="currentColor"
-      className="w-6 h-6 text-white"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 18.25v2.25m0-2.25a5.25 5.25 0 0 1-5.25-5.25M12 18.25a5.25 5.25 0 0 0 5.25-5.25M9 10.5a3 3 0 1 0 6 0v-4.5a3 3 0 1 0-6 0v4.5zM19.5 10.5v.75a7.5 7.5 0 0 1-15 0v-.75"
-      />
-    </svg>
-  </button>
-</div>
+            <div className="relative">
+              {isListening && (
+                <div className="absolute inset-0 animate-ping w-12 h-12 rounded-full bg-blue-500 opacity-30 z-0"></div>
+              )}
+              <button
+                onClick={startListening}
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-[#4A456A] hover:ring-2 hover:ring-blue-400 hover:bg-[#635FC7] transition shadow-md relative z-10"
+                title="Speak"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.25v2.25m0-2.25a5.25 5.25 0 0 1-5.25-5.25M12 18.25a5.25 5.25 0 0 0 5.25-5.25M9 10.5a3 3 0 1 0 6 0v-4.5a3 3 0 1 0-6 0v4.5zM19.5 10.5v.75a7.5 7.5 0 0 1-15 0v-.75" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </main>
 
-      {/* Listening Modal */}
       {isListening && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#3F3B5A] text-white p-4 rounded-lg shadow-lg flex items-center justify-center">
           <div className="flex items-center space-x-2">
