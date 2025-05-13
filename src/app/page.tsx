@@ -1,106 +1,97 @@
+// login.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+import { signIn } from "next-auth/react";
 import { Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 
 const Login = () => {
   const router = useRouter();
-  const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
 
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const storedUser = localStorage.getItem("user");
-    if (!storedUser) return alert("No user found. Please sign up.");
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
 
-    const user = JSON.parse(storedUser);
-    if (user.email === form.email && user.password === form.password) {
-      localStorage.setItem("loggedIn", "true");
-      router.push("/dashboard");
-    } else {
-      alert("Invalid credentials");
-    }
-  };
+    const data = await res.json();
 
-  useEffect(() => {
-    if (localStorage.getItem("loggedIn") === "true") {
-      router.push("/dashboard");
-    }
-  }, []);
+    if (!res.ok) {
+  alert(data.error || "Login failed");
+  return;
+}
+
+// ✅ Save login state
+localStorage.setItem("loggedIn", "true");
+
+
+    router.push("/dashboard");
+  } catch (err) {
+    console.error("Login error:", err);
+    alert("Something went wrong");
+  }
+};
+
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#2B2738]">
       {/* Left Side */}
       <div className="w-1/2 flex flex-col justify-center items-center bg-[url('/bg.png')] bg-cover">
         <div className="p-3 mt-[-130px]">
-          <Image
-            src="/hindi-sahayak.png"
-            alt="chat icon"
-            width={300}
-            height={300}
-          />
+          <Image src="/hindi-sahayak.png" alt="chat icon" width={300} height={300} />
         </div>
         <p className="text-[55px] text-white font-semibold text-center mb-4 leading-tight mt-[-70px]">
           An AI Assistant For <br /> Government Job Opportunities
         </p>
         <div className="p-3">
-          <Image
-            src="/logo.png"
-            alt="logo"
-            width={120}
-            height={120}
-            className="animate-bounce-custom"
-            style={{
-              animation: "smoothBounce 2s ease-in-out infinite",
-            }}
-          />
-          <style jsx>{`
-            @keyframes smoothBounce {
-              0%,
-              100% {
-                transform: translateY(0);
-              }
-              50% {
-                transform: translateY(-10px);
-              }
-            }
-          `}</style>
+          <Image src="/logo.png" alt="logo" width={120} height={120} className="animate-bounce-custom" />
         </div>
       </div>
 
       {/* Right Side */}
       <div className="w-1/2 flex flex-col justify-center items-center p-10 bg-[#2B2738]">
-        <h2 className="text-3xl font-semibold mb-8">Login</h2>
-        <form className="w-full max-w-sm space-y-6" onSubmit={handleLogin}>
+        <h2 className="text-3xl font-semibold mb-8 text-white">Login</h2>
+        <form className="w-full max-w-sm space-y-6" onSubmit={handleSubmit}>
           <div>
-            <label className="block mb-1 text-sm">E-mail</label>
+            <label className="block mb-1 text-sm text-white">E-mail</label>
             <input
               name="email"
               type="email"
-              className="w-full bg-transparent border-b-2 border-white outline-none py-2"
+              className="w-full bg-transparent border-b-2 border-white outline-none py-2 text-white"
               placeholder="Enter your email"
-              value={form.email}
+              value={formData.email}
               onChange={handleChange}
               required
             />
           </div>
           <div>
-            <label className="block mb-1 text-sm">Password</label>
+            <label className="block mb-1 text-sm text-white">Password</label>
             <div className="relative">
               <input
                 name="password"
                 type={showPassword ? "text" : "password"}
-                className="w-full bg-transparent border-b-2 border-white outline-none py-2 mb-3"
+                className="w-full bg-transparent border-b-2 border-white outline-none py-2 mb-3 text-white"
                 placeholder="Enter your password"
-                value={form.password}
+                value={formData.password}
                 onChange={handleChange}
                 required
               />
@@ -122,9 +113,9 @@ const Login = () => {
           </button>
           <p className="text-sm text-center text-gray-400">
             Don’t have an account yet?{" "}
-            <Link href="/signup" className="text-purple-400 hover:underline">
+            <a href="/signup" className="text-purple-400 hover:underline">
               Sign Up
-            </Link>
+            </a>
           </p>
         </form>
       </div>
@@ -133,3 +124,4 @@ const Login = () => {
 };
 
 export default Login;
+

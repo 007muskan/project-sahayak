@@ -8,7 +8,6 @@ import Image from "next/image";
 const Signup = () => {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,49 +21,46 @@ const Signup = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Store user data in localStorage (just for demo purposes)
-    localStorage.setItem("user", JSON.stringify(formData));
-    localStorage.setItem("loggedIn", "true");
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Registration failed");
+      return;
+    }
+
     router.push("/dashboard");
-  };
+  } catch (err) {
+    console.error("Signup error:", err);
+    alert("Something went wrong");
+  }
+};
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#2B2738]">
       {/* Left Side */}
       <div className="w-1/2 flex flex-col justify-center items-center bg-[url('/bg.png')] bg-cover">
         <div className="p-3 mt-[-130px]">
-          <Image
-            src="/hindi-sahayak.png"
-            alt="chat icon"
-            width={300}
-            height={300}
-          />
+          <Image src="/hindi-sahayak.png" alt="chat icon" width={300} height={300} />
         </div>
         <p className="text-[55px] text-white font-semibold text-center mb-4 leading-tight mt-[-70px]">
           An AI Assistant For <br /> Government Job Opportunities
         </p>
         <div className="p-3">
-          <Image
-            src="/logo.png"
-            alt="logo"
-            width={120}
-            height={120}
-            className="animate-bounce-custom"
-            style={{
-              animation: "smoothBounce 2s ease-in-out infinite",
-            }}
-          />
+          <Image src="/logo.png" alt="logo" width={120} height={120} className="animate-bounce-custom" />
           <style jsx>{`
             @keyframes smoothBounce {
-              0%,
-              100% {
-                transform: translateY(0);
-              }
-              50% {
-                transform: translateY(-10px);
-              }
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-10px); }
             }
           `}</style>
         </div>
@@ -140,3 +136,4 @@ const Signup = () => {
 };
 
 export default Signup;
+
