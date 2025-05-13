@@ -1,11 +1,18 @@
-// pages/api/login.js
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { sign } from "jsonwebtoken";
+import dotenv from "dotenv";
+import { NextApiRequest, NextApiResponse } from "next";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+export default async function handler(
+  req: NextApiRequest, // Typing req parameter
+  res: NextApiResponse  // Typing res parameter
+) {
   if (req.method === "POST") {
     const { email, password } = req.body;
 
@@ -30,8 +37,12 @@ export default async function handler(req, res) {
         return res.status(401).json({ error: "Invalid password" });
       }
 
-      // Create a JWT token
-      const token = sign({ userId: user.id }, process.env.JWT_SECRET, {
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error("JWT_SECRET is not defined.");
+      }
+
+      const token = sign({ userId: user.id }, jwtSecret, {
         expiresIn: "1d",
       });
 
@@ -40,8 +51,8 @@ export default async function handler(req, res) {
       console.error("Login error:", error);
       return res.status(500).json({ error: "Error logging in" });
     }
-
   } else {
     res.status(405).json({ error: "Method not allowed" });
   }
 }
+

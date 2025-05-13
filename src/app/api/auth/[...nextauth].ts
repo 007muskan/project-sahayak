@@ -1,11 +1,41 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions, type DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
+
+// --- Prisma instance ---
 const prisma = new PrismaClient();
 
+// --- Correct type overrides (fully compatible) ---
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+    } & DefaultSession["user"];
+  }
+
+  interface User {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    user?: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
+
+// --- Auth handler ---
 const handler = NextAuth({
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -28,9 +58,10 @@ const handler = NextAuth({
         if (!isValid) return null;
 
         return {
-          id: user.id.toString(), // Convert number to string
+          id: user.id.toString(),
           name: user.name,
           email: user.email,
+          image: null,
         };
       },
     }),
@@ -48,6 +79,7 @@ const handler = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
+          image: null,
         };
       }
       return token;
@@ -58,11 +90,14 @@ const handler = NextAuth({
           id: token.user.id,
           name: token.user.name,
           email: token.user.email,
+          image: null,
         };
       }
       return session;
     },
   },
-});
+} satisfies NextAuthOptions);
 
 export { handler as GET, handler as POST };
+
+
