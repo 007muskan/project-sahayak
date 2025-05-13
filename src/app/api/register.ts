@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { openDb } from '../../utils/db';
+import { openDb } from '../../../utils/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key_here'; // Make sure this is set in .env
 
