@@ -2,12 +2,28 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import CategoryModal from "../components/CategoryModal";
+import Image from "next/image";
+
+
+type SpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onresult: (event: any) => void;
+  onerror: (event: any) => void;
+  onend: () => void;
+  start: () => void;
+};
 
 declare global {
   interface Window {
-    webkitSpeechRecognition: any;
+    webkitSpeechRecognition: {
+      new (): SpeechRecognition;
+    };
   }
 }
+
 
 interface Message {
   role: "user" | "bot";
@@ -22,7 +38,8 @@ const Dashboard = () => {
   const [input, setInput] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+// If you don't plan to use it right now:
+const [, setSelectedCategory] = useState<string | null>(null);
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
 
   // Effect to load query history from localStorage
@@ -40,7 +57,7 @@ const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     if (isLoggedIn !== "true") {
       router.push("/");
     }
-  }, []);
+  },[router]);
 
   useEffect(() => {
     if (chatRef.current) {
@@ -132,11 +149,15 @@ const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     <div className="h-screen flex text-white bg-[#2B2738]">
       {/* Sidebar */}
       <aside className="w-[250px] bg-[#1F1B2E] p-4 flex flex-col">
-        <img 
+        <div className="relative w-[200px] h-[200px] mt-[-45px] mb-[-30px] ml-[-10px]">
+  <Image
     src="/main-logo.png"
     alt="App Logo"
-    className="w-50 h-50 object-contain mt-[-45px] mb-[-30px] ml-[-10px]"
+    fill
+    className="object-contain"
+    priority
   />
+</div>
         <button className="bg-[#3F3B5A] text-white py-2 px-4 rounded mb-4 hover:bg-[#4A456A]">
           + New Chat
         </button>

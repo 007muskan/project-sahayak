@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 const Signup = () => {
   const router = useRouter();
@@ -125,9 +126,10 @@ const Signup = () => {
           </form>
           <p className="text-sm text-center text-gray-400">
             Already have an account?{" "}
-            <a href="/" className="text-purple-400 hover:underline">
-              Login
-            </a>
+            <Link href="/" className="text-purple-400 hover:underline">
+  Login
+</Link>
+
           </p>
         </div>
       </div>

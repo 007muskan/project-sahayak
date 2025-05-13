@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 export default function CategoryModal({
   isOpen,
   onClose,
-  onSelect,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -13,6 +12,15 @@ export default function CategoryModal({
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [step, setStep] = useState(1); // Step 1: Category Selection, 2: Dynamic Form
+
+  type FormDataType = {
+  name?: string;
+  degree?: string;
+  interest?: string;
+  state?: string;
+  companyName?: string;
+  startupType?: string;
+};
 
   const categories = [
     { icon: "🎓", title: "Internship" },
