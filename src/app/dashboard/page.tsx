@@ -20,7 +20,7 @@ type SpeechRecognition = {
   lang: string;
   onstart: () => void;
  onresult: (event: SpeechRecognitionEvent) => void;
-  onerror: (event: any) => void;
+  onerror: (event: SpeechRecognitionErrorEvent) => void;
   onend: () => void;
   start: () => void;
 };
