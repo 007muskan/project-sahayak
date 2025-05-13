@@ -86,12 +86,17 @@ const [, setSelectedCategory] = useState<string | null>(null);
     setQueryHistory((prev) => [...prev, input]);
     setInput("");
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ask`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: userMsg.text }),
-      });
+    const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:5000'
+    : 'https://sahayak-sybj.onrender.com');
+
+const res = await fetch(`${BACKEND_URL}/ask`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ question: userMsg.text }),
+});
 
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
