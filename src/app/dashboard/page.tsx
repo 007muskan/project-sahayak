@@ -87,7 +87,7 @@ const [, setSelectedCategory] = useState<string | null>(null);
     setInput("");
 
     try {
-      const res = await fetch("http://localhost:5000/ask", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: userMsg.text }),
